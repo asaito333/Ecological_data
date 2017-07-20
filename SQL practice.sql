@@ -23,3 +23,16 @@ and f.origin=flights.origin) +1
 as flight_sequence_number
 from Flights
 ;
+
+select count(*) from Flights
+where (arr_time is not null) 
+and (destination="ATL");
+
+SELECT    state, 
+    COUNT(CASE WHEN elevation < 1000 THEN 1 ELSE NULL END) as count_low_elevation_aiports 
+FROM airports 
+GROUP BY state;
+
+select origin, sum(distance) as total_flight_distance, sum(case when carrier = "DL" then distance else 0 end) as total_delta_flight_distance
+from flights
+group by 1;

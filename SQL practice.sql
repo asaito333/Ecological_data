@@ -57,7 +57,83 @@ select city || ' '|| state as location from bakeries;
 /* Analyzing Business Metrics */
 
 select name, round(sum(amount_paid) / (select sum(amount_paid) from order_items) *100.0, 2) as pct 
+
+select
+  case name /* create new variable with if statement can start with "case" function as one variable */
+    when 'kale-smoothie'    then 'smoothie'
+    when 'banana-smoothie'  then 'smoothie'
+    when 'orange-juice'     then 'drink'
+    when 'soda'             then 'drink'
+    when 'blt'              then 'sandwich'
+    when 'grilled-cheese'   then 'sandwich'
+    when 'tikka-masala'     then 'dinner'
+    when 'chicken-parm'     then 'dinner'
+    else 'other'
+  end as category, 
+  round(1.0 * sum(amount_paid) / (select sum(amount_paid) from order_items) * 100, 2) as pct
+from order_items
+group by 1
+order by 2 desc;
+
 /* inside the close = total of all rows, nominator = each row from order_items */
 from order_items
 group by 1
 order by 2 desc;
+
+
+
+select date(created_at),
+round( sum(price) / count(distinct user_id), 2) as arppu
+      from purchases
+      where refunded_at is null
+      group by 1
+      order by 1;
+      
+/* quickly refer to subquery "with" */
+with daily_revenue as (
+select
+  date(created_at) as dt,
+  round(sum(price), 2) as rev
+  from purchases
+  where refunded_at is null
+  group by 1
+)
+select * from daily_revenue 
+order by dt;
+
+
+/* create variable, and use variable with one from different table */
+with
+daily_revenue as (
+select
+  date(created_at) as dt,
+  round(sum(price), 2) as rev
+  from purchases
+  where refunded_at is null
+  group by 1
+),
+daily_players as (
+select
+  	date(created_at) as dt,
+    count(distinct user_id) as players
+    from gameplays
+  group by 1
+)
+select daily_revenue.dt,
+daily_revenue.rev/daily_players.players as arpu
+from daily_revenue
+join daily_players using (dt); /* using can be used when you have same named variable */
+      
+      
+ /* retention by self join */
+ select
+	date(g1.created_at) as dt,
+  round(100* count(distinct g2.user_id) / count(distinct g1.user_id)) as retention
+ 
+from gameplays as g1
+left join  gameplays as g2 
+on g1.user_id = g2.user_id
+and date(g1.created_at) = date(datetime(g2.created_at, "-1 day"))
+group by 1
+order by 1
+limit 100;
